@@ -49,7 +49,7 @@ public class NPCManager {
             villager.setProfession(getRandomProfession());
 
             Personality personality = random.nextInt(3) == 0 ? Personality.HOSTILE : Personality.FRIENDLY;
-            NPC npc = new NPC(villager, Personality.HOSTILE);
+            NPC npc = new NPC(villager, personality);
             npc.initializeTrust(player, 50);
             npcVillagers.add(npc);
             Bukkit.getLogger().info("NPC added: " + npc.getVillager().getUniqueId());

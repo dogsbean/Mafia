@@ -18,7 +18,6 @@ public class GameStartCommand implements CommandExecutor {
         if (commandSender instanceof Player) {
             Player player = ((Player) commandSender).getPlayer();
             Main.getInstance().getGameManager().startGame();
-            Bukkit.broadcastMessage("Game Starting");
             return true;
         }
         return false;

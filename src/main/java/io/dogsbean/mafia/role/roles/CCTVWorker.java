@@ -11,4 +11,9 @@ public class CCTVWorker extends Role {
     @Override
     public void performAction() {
     }
+
+    @Override
+    public boolean isCitizen() {
+        return true;
+    }
 }

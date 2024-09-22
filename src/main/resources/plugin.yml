@@ -2,6 +2,9 @@
   main: io.dogsbean.mafia.Main
   version: 1.0
   commands:
-    gamemanage:
-      description: "Manage the game."
+    start:
+      description: "start the game."
       aliases: [ start ]
+    end:
+      description: "end the game."
+      aliases: [ end ]

@@ -12,4 +12,9 @@ public class Mafia extends Role {
     public void performAction() {
         // 범죄자가 할 수 있는 행동 정의
     }
+
+    @Override
+    public boolean isCitizen() {
+        return false;
+    }
 }

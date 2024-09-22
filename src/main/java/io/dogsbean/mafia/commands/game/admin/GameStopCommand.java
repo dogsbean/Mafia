@@ -5,28 +5,20 @@ import io.dogsbean.mafia.commands.PlayerCommand;
 import io.dogsbean.mafia.game.GameEndReason;
 import io.dogsbean.mafia.game.GameValidation;
 import org.bukkit.ChatColor;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class GameStopCommand extends PlayerCommand {
-    private final Main plugin;
-
-    public GameStopCommand(Main plugin) {
-        super("gamemanage stop", "mafia.game");
-        this.plugin = plugin;
-        setAliases("gamemanage stop");
-        setUsage(ChatColor.RED + "Usage: /gamemanage stop");
-    }
-
+public class GameStopCommand implements CommandExecutor {
     @Override
-    public void execute(Player player, String[] args) {
-        if (args.length < 2) {
-            player.sendMessage(usageMessage);
-            return;
-        }
-
-        if (GameValidation.isAbleToEnd(player)) {
+    public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
+        if (commandSender instanceof Player) {
+            Player player = ((Player) commandSender).getPlayer();
             Main.getInstance().getGameManager().endGame("Game Ended.", GameEndReason.FORCE);
+            return true;
         }
+        return false;
     }
 }
 

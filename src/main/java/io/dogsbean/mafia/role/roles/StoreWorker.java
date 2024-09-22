@@ -11,4 +11,9 @@ public class StoreWorker extends Role {
     @Override
     public void performAction() {
     }
+
+    @Override
+    public boolean isCitizen() {
+        return true;
+    }
 }
