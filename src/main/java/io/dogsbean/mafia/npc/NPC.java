@@ -1,5 +1,9 @@
 package io.dogsbean.mafia.npc;
 
+import io.dogsbean.mafia.npc.event.PersonalityChangeEvent;
+import io.dogsbean.mafia.npc.event.TrustLevelChangeEvent;
+import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 
@@ -7,9 +11,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class NPC {
-    private Villager villager;
-    private Personality personality;
-    private Map<Player, Integer> trustLevel;
+    @Getter private final Villager villager;
+    @Getter private Personality personality;
+    @Getter private Map<Player, Integer> trustLevel;
 
     public NPC(Villager villager, Personality personality) {
         this.villager = villager;
@@ -17,37 +21,22 @@ public class NPC {
         this.trustLevel = new HashMap<>();
     }
 
+    public void initializeTrust(Player player, int initialTrust) {
+        trustLevel.put(player, initialTrust); // 플레이어의 신뢰도 초기화
+    }
+
     public Villager getVillager() {
         return villager;
     }
 
     public void interact(Player player) {
-        String prefix = villager.getCustomName().split(" ")[0]; // 이름에서 접두사 추출
+        String responseMessage = NPCLang.getMessage(this, player);
+        player.sendMessage(villager.getCustomName() + ": " + responseMessage);
+    }
 
-        if (personality == Personality.FRIENDLY) {
-            switch (prefix) {
-                case "한가한":
-                    player.sendMessage(villager.getCustomName() + ": " + "무슨 일이에요?");
-                    break;
-                case "바쁜":
-                    player.sendMessage(villager.getCustomName() + ": " + "제가 좀 바빠서..");
-                    break;
-                case "호기심 많은":
-                    player.sendMessage(villager.getCustomName() + ": " + "무슨 일인가요?");
-                    break;
-                case "겁에 질린":
-                    player.sendMessage(villager.getCustomName() + ": " + "지금 얘기할 기분이 아니에요. 나중에 다시 애기해요.");
-                    break;
-                case "귀찮은":
-                    player.sendMessage(villager.getCustomName() + ": " + "귀찮은걸요.");
-                    break;
-                default:
-                    player.sendMessage(villager.getCustomName() + ": " + "안녕하세요.");
-                    break;
-            }
-        } else if (personality == Personality.HOSTILE) {
-            player.sendMessage(villager.getCustomName() + ": " + "가까이 오지 마세요.");
-        }
+    public void interactLowHealth(Player player) {
+        String responseMessage = NPCLang.getHealthBasedMessage(this);
+        player.sendMessage(villager.getCustomName() + ": " + responseMessage);
     }
 
     public String provideInformation(Player player) {
@@ -57,5 +46,44 @@ public class NPC {
         } else {
             return "정보를 제공하지 않거나 거짓 정보를 제공합니다.";
         }
+    }
+
+    public void decreaseTrust(Player player, int amount) {
+        int currentTrust = trustLevel.getOrDefault(player, 50);
+        trustLevel.put(player, Math.max(0, currentTrust - amount));
+    }
+
+    public void updateTrust(Player player, int amount) {
+        int currentTrust = trustLevel.getOrDefault(player, 0);
+        int newTrust = currentTrust + amount;
+
+        newTrust = Math.max(newTrust, 0);
+
+        if (newTrust != currentTrust) {
+            trustLevel.put(player, newTrust);
+            Bukkit.getPluginManager().callEvent(new TrustLevelChangeEvent(player, this, currentTrust, newTrust));
+        }
+    }
+
+    public void updatePersonality(int amount) {
+        Personality currentPersonality = personality;
+        Personality newPersonality = getPersonalityByLevel(personality.getPersonalityLevel() - amount);
+
+        if (currentPersonality != newPersonality) {
+            personality = newPersonality;
+            Bukkit.getPluginManager().callEvent(new PersonalityChangeEvent(this, currentPersonality, newPersonality));
+        }
+    }
+
+    public static Personality getPersonalityByLevel(int level) {
+        Personality bestMatch = null;
+        for (Personality personality : Personality.values()) {
+            if (personality.getPersonalityLevel() <= level) {
+                if (bestMatch == null || personality.getPersonalityLevel() > bestMatch.getPersonalityLevel()) {
+                    bestMatch = personality;
+                }
+            }
+        }
+        return bestMatch;
     }
 }

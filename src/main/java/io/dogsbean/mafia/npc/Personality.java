@@ -1,7 +1,15 @@
 package io.dogsbean.mafia.npc;
 
+import lombok.Getter;
+
 public enum Personality {
-    FRIENDLY, NEUTRAL, HOSTILE;
+    FRIENDLY(100), NEUTRAL(60), HOSTILE(20);
+
+    @Getter private final int personalityLevel;
+
+    Personality(final int personalityLevel) {
+        this.personalityLevel = personalityLevel;
+    }
 
     public String respondToQuestion() {
         switch (this) {

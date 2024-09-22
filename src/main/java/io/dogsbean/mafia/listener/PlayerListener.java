@@ -20,7 +20,7 @@ public class PlayerListener implements Listener {
         Role role = roleManager.getRole(player);
 
         if (role != null) {
-            role.performAction(); // 역할별 행동 처리
+            role.performAction();
         }
     }
 }

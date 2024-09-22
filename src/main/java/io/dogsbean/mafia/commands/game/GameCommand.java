@@ -18,7 +18,7 @@ public class GameCommand extends PlayerCommand {
 
     @Override
     public void execute(Player player, String[] args) {
-        if (args.length < 2) {
+        if (args.length < 1) {
             player.sendMessage(usageMessage);
             return;
         }

@@ -19,6 +19,6 @@ public class CCTV {
     }
 
     public List<Player> getPlayersInView() {
-        // CCTV 시야 내에 있는 플레이어 반환
+        return null; //TODO:
     }
 }

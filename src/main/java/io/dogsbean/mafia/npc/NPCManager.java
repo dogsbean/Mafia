@@ -1,22 +1,26 @@
 package io.dogsbean.mafia.npc;
 
+import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import java.util.Random;
+
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class NPCManager {
-    private List<NPC> npcVillagers = new ArrayList<>();
+    @Getter private List<NPC> npcVillagers = new ArrayList<>();
     private Random random = new Random();
 
     private final String[] villagerPrefix = {
             "한가한",
             "바쁜",
             "호기심 많은",
-            "겁에 질린",
             "귀찮은"
     };
 
@@ -27,25 +31,50 @@ public class NPCManager {
             Villager.Profession.BLACKSMITH
     };
 
-    public void loadVillagers(World world) {
-        Location npcLocation = new Location(world, 100, 65, 100); // TODO: 아레나 pvp 플러그인 처럼 울타리 위에 머리 설치한 곳 무작위 좌표에 스폰
-        Villager villager = (Villager) world.spawnEntity(npcLocation, EntityType.VILLAGER);
-        villager.setCustomName(getUniqueVillagerName());
-        villager.setCustomNameVisible(true);
-        villager.setProfession(getRandomProfession());
+    public void loadVillagers(World world, Player player) {
+        if (world == null || player == null) {
+            Bukkit.getLogger().info("World or player is null!");
+            return;
+        }
+        Random random = new Random();
 
-        npcVillagers.add(new NPC(villager, Personality.FRIENDLY));
+        for (int i = 0; i < 4; i++) {
+            int offsetX = random.nextInt(61) - 30;
+            int offsetZ = random.nextInt(61) - 30;
+            Location npcLocation = player.getLocation().add(offsetX, 0, offsetZ);
+
+            npcLocation.setY(world.getHighestBlockYAt(npcLocation));
+
+            Villager villager = (Villager) world.spawnEntity(npcLocation, EntityType.VILLAGER);
+            villager.setCustomName(getUniqueVillagerName());
+            villager.setCustomNameVisible(true);
+            villager.setProfession(getRandomProfession());
+
+            NPC npc = new NPC(villager, Personality.FRIENDLY);
+            npc.initializeTrust(player, 50);
+            npcVillagers.add(npc);
+            Bukkit.getLogger().info("NPC added: " + npc.getVillager().getUniqueId());
+        }
+
+        Bukkit.getLogger().info("Total NPC count after adding: " + npcVillagers.size());
+    }
+
+    public void removeAllVillagers() {
+        for (NPC npc : npcVillagers) {
+            npc.getVillager().remove();
+        }
+        npcVillagers.clear();
+        Bukkit.getLogger().info("All NPCs removed.");
     }
 
     private String getUniqueVillagerName() {
         String name;
         int attempt = 0;
 
-        // 중복되지 않는 이름을 찾기 위해 시도
         do {
             name = getRandomVillagerName();
             attempt++;
-        } while (isNameUsed(name) && attempt < 100); // 중복된 이름이 있을 경우 다시 생성 (최대 100회 시도)
+        } while (isNameUsed(name) && attempt < 100);
 
         return name;
     }
@@ -65,10 +94,39 @@ public class NPCManager {
                 .anyMatch(npc -> npc.getVillager().getCustomName().equals(name));
     }
 
-    public NPC getNearestVillager(Location location) {
-        // 특정 위치에 가장 가까운 Villager NPC 반환
+    public List<NPC> getNearestVillagers(Villager villager, int limit) {
         return npcVillagers.stream()
-                .min(Comparator.comparingDouble(npc -> npc.getVillager().getLocation().distance(location)))
+                .filter(npc -> npc.getVillager() != villager)
+                .sorted(Comparator.comparingDouble(npc -> npc.getVillager().getLocation().distance(villager.getLocation())))
+                .limit(limit)
+                .collect(Collectors.toList());
+    }
+
+    public List<NPC> getNearestVillagersWithinRange(Villager villager, double range) {
+        return npcVillagers.stream()
+                .filter(npc -> npc.getVillager() != villager)
+                .filter(npc -> npc.getVillager().getLocation().distance(villager.getLocation()) <= range)
+                .sorted(Comparator.comparingDouble(npc -> npc.getVillager().getLocation().distance(villager.getLocation())))
+                .collect(Collectors.toList());
+    }
+
+    public NPC getNPC(Villager villager) {
+        Bukkit.getLogger().info("Searching for NPC with UUID: " + villager.getUniqueId());
+        return npcVillagers.stream()
+                .filter(npc -> npc.getVillager() == villager)
+                .findFirst()
                 .orElse(null);
+    }
+
+    public NPC getNPC(UUID uuid) {
+        Bukkit.getLogger().info("Searching for NPC with UUID: " + uuid);
+        return npcVillagers.stream()
+                .filter(npc -> npc.getVillager().getUniqueId().equals(uuid))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public List<NPC> getNPCS() {
+        return npcVillagers;
     }
 }

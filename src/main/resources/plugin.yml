@@ -1,0 +1,7 @@
+  name: Mafia
+  main: io.dogsbean.mafia.Main
+  version: 1.0
+  commands:
+    gamemanage:
+      description: "Manage the game."
+      aliases: [ start ]

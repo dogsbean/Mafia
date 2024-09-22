@@ -1,7 +1,11 @@
 package io.dogsbean.mafia;
 
 import io.dogsbean.mafia.commands.BaseCommand;
+import io.dogsbean.mafia.commands.game.GameCommand;
+import io.dogsbean.mafia.commands.game.admin.GameStartCommand;
+import io.dogsbean.mafia.commands.game.admin.GameStopCommand;
 import io.dogsbean.mafia.game.GameManager;
+import io.dogsbean.mafia.listener.NPCListener;
 import io.dogsbean.mafia.npc.NPCManager;
 import io.dogsbean.mafia.role.RoleManager;
 import io.dogsbean.mafia.role.manager.cctv.CCTVManager;
@@ -9,7 +13,6 @@ import io.dogsbean.mafia.role.manager.day.DayCycle;
 import io.dogsbean.mafia.role.manager.news.NewsManager;
 import lombok.Getter;
 import org.bukkit.Bukkit;
-import org.bukkit.Server;
 import org.bukkit.command.CommandMap;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -34,9 +37,15 @@ public class Main extends JavaPlugin {
         cctvManager = new CCTVManager();
         newsManager = new NewsManager();
         dayCycle = new DayCycle();
-        gameManager = new GameManager(Bukkit.getWorld("world"));
+        gameManager = new GameManager(getServer().getWorld("world"));
 
-        registerCommands();
+        Bukkit.getPluginManager().registerEvents(new NPCListener(), this);
+        getCommand("start").setExecutor(new GameStartCommand());
+    }
+
+    @Override
+    public void onDisable() {
+        npcManager.removeAllVillagers();
     }
 
     public void registerCommands(BaseCommand... commands) {

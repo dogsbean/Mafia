@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 import java.util.*;
 
 public class GameManager {
-    private List<Player> players;
+    private List<Player> players = new ArrayList<>();
     private NPCManager npcManager;
     private World world;
     private boolean gameInProgress;
@@ -17,7 +17,7 @@ public class GameManager {
     public GameManager(World world) {
         this.world = world;
         this.players = new ArrayList<>();
-        this.npcManager = new NPCManager();
+        this.npcManager = Main.getInstance().getNpcManager();
         this.gameInProgress = false;
     }
 
@@ -27,8 +27,10 @@ public class GameManager {
         }
 
         gameInProgress = true;
-        players.clear();
-        npcManager.loadVillagers(world);
+        players.addAll(Bukkit.getOnlinePlayers());
+        for (Player player : players) {
+            npcManager.loadVillagers(world, player);
+        }
         Main.getInstance().getRoleManager().assignRoles();
         Main.getInstance().getDayCycle().start();
 
