@@ -1,6 +1,8 @@
 package io.dogsbean.mafia.game.police;
 
 import io.dogsbean.mafia.Main;
+import io.dogsbean.mafia.game.law.Crime;
+import io.dogsbean.mafia.game.law.Criminal;
 import io.dogsbean.mafia.npc.NPC;
 import io.dogsbean.mafia.util.PlayerTitle;
 import lombok.Getter;
@@ -47,11 +49,16 @@ public class PoliceSystem {
             return;
         }
 
-        IronGolem police = (IronGolem) player.getWorld().spawnEntity(reportedNPCs.get(0).getVillager().getLocation(), EntityType.IRON_GOLEM);
+        NPC npc = reportedNPCs.get(0);
+        IronGolem police = (IronGolem) player.getWorld().spawnEntity(npc.getVillager().getLocation(), EntityType.IRON_GOLEM);
         police.setCustomName("경찰");
         police.setCustomNameVisible(true);
         polices.put(player.getUniqueId(), police);
 
+        if (npc.getVillager().isDead()) {
+            Crime murder = new Crime("살인", "사람을 죽이는 범죄", 90);
+            Criminal.commitCrime(player.getName(), murder);
+        }
         player.sendMessage("경찰이 출동했습니다! 도망치지 마세요!");
 
         police.setTarget(player);

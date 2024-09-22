@@ -1,9 +1,6 @@
 package io.dogsbean.mafia.game.law;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Criminal {
     private static Map<String, List<Crime>> crimeRecords = new HashMap<>();
@@ -34,13 +31,20 @@ public class Criminal {
             return "범죄 기록이 없습니다.";
         }
 
-        // 범죄 목록을 쉼표로 구분된 문자열로 변환
+        Set<String> uniqueCrimes = new HashSet<>();
         StringBuilder crimeList = new StringBuilder();
+
         for (Crime crime : crimes) {
-            crimeList.append(crime.getDescription()).append(", ");
+            String description = crime.getDescription();
+            if (uniqueCrimes.add(description)) {
+                crimeList.append(description).append(", ");
+            }
         }
 
-        // 마지막 쉼표 및 공백 제거
+        if (crimeList.length() == 0) {
+            return "범죄 기록이 없습니다.";
+        }
+
         crimeList.setLength(crimeList.length() - 2);
         return crimeList.toString();
     }

@@ -1,6 +1,7 @@
 package io.dogsbean.mafia.game.day;
 
 import io.dogsbean.mafia.Main;
+import io.dogsbean.mafia.game.GameEndReason;
 import io.dogsbean.mafia.game.law.Criminal;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -51,6 +52,7 @@ public class DayCycle {
             dayTask = null;
         }
 
+        Main.getInstance().getGameManager().endGame("Game Ended.", GameEndReason.MAFIA_ESCAPED);
         day = 0;
     }
 
