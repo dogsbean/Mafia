@@ -12,6 +12,7 @@ public class DayCycle {
     private BukkitRunnable dayTask;
 
     public void start() {
+        day = 0;
         dayTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -45,7 +46,12 @@ public class DayCycle {
     }
 
     private void endGame() {
-        Bukkit.broadcastMessage("게임이 종료되었습니다.");
+        if (dayTask != null) {
+            dayTask.cancel();
+            dayTask = null;
+        }
+
+        day = 0;
     }
 
     public int getLeftDays() {
