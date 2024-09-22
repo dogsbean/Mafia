@@ -77,54 +77,12 @@ public final class BasicPreventionListener implements Listener {
     }
 
     @EventHandler
-    public void onBlockPlace(BlockPlaceEvent event) {
-        if (!canInteractWithBlocks(event.getPlayer())) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onBlockBreak(BlockBreakEvent event) {
-        if (!canInteractWithBlocks(event.getPlayer())) {
-            event.setCancelled(true);
-        }
-    }
-
-    private boolean canInteractWithBlocks(Player player) {
-        boolean isCreative = player.getGameMode() == GameMode.CREATIVE;
-        boolean isOp = player.isOp();
-
-        return isCreative && isOp;
-    }
-
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        if (event.getAction() == Action.PHYSICAL && event.getClickedBlock().getType() == Material.SOIL) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
     public void onPrepareCraft(PrepareItemCraftEvent event) {
         event.getInventory().setResult(null);
     }
 
     @EventHandler
     public void onCraft(CraftItemEvent event) {
-        event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onPreCommand(PlayerCommandPreprocessEvent event) {
-        if(event.getMessage().toLowerCase().startsWith("/me") ||
-                event.getMessage().toLowerCase().startsWith("/minecraft:me") ||
-                event.getMessage().toLowerCase().startsWith("/bukkit:me")) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onAchievement(PlayerAchievementAwardedEvent event) {
         event.setCancelled(true);
     }
 }

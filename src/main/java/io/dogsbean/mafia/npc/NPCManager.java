@@ -109,8 +109,21 @@ public class NPCManager {
                 .collect(Collectors.toList());
     }
 
+    public List<NPC> getNearestVillagersWithinRange(Location location, double range) {
+        return npcVillagers.stream()
+                .filter(npc -> npc.getVillager().getLocation().distance(location) <= range)
+                .sorted(Comparator.comparingDouble(npc -> npc.getVillager().getLocation().distance(location)))
+                .collect(Collectors.toList());
+    }
+
+    public NPC getNearestVillagerWithinRange(Location location, double range) {
+        return npcVillagers.stream()
+                .filter(npc -> npc.getVillager().getLocation().distance(location) <= range)
+                .min(Comparator.comparingDouble(npc -> npc.getVillager().getLocation().distance(location)))
+                .orElse(null);
+    }
+
     public NPC getNPC(Villager villager) {
-        Bukkit.getLogger().info("Searching for NPC with UUID: " + villager.getUniqueId());
         return npcVillagers.stream()
                 .filter(npc -> npc.getVillager() == villager)
                 .findFirst()
@@ -118,7 +131,6 @@ public class NPCManager {
     }
 
     public NPC getNPC(UUID uuid) {
-        Bukkit.getLogger().info("Searching for NPC with UUID: " + uuid);
         return npcVillagers.stream()
                 .filter(npc -> npc.getVillager().getUniqueId().equals(uuid))
                 .findFirst()

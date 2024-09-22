@@ -1,5 +1,7 @@
 package io.dogsbean.mafia.npc;
 
+import io.dogsbean.mafia.game.law.Law;
+import io.dogsbean.mafia.game.law.NPCAction;
 import io.dogsbean.mafia.npc.event.PersonalityChangeEvent;
 import io.dogsbean.mafia.npc.event.TrustLevelChangeEvent;
 import lombok.Getter;
@@ -81,5 +83,15 @@ public class NPC {
             return Personality.FRIENDLY; // 기본 Personality 반환
         }
         return Personality.values()[level]; // 범위 내일 경우 해당 Personality 반환
+    }
+
+    public void onPlayerViolation(Player player, Law law) {
+        Bukkit.getLogger().info("법 위반 발생: " + law.getDescription()); // 디버깅 메시지 추가
+
+        // 단일 NPCAction 실행
+        NPCAction action = law.getNpcAction(); // 수정된 부분
+        if (action != null) {
+            action.execute(player);
+        }
     }
 }

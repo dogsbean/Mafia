@@ -15,7 +15,9 @@ public class GameStopCommand implements CommandExecutor {
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
         if (commandSender instanceof Player) {
             Player player = ((Player) commandSender).getPlayer();
-            Main.getInstance().getGameManager().endGame("Game Ended.", GameEndReason.FORCE);
+            if (GameValidation.isAbleToEnd(player)) {
+                Main.getInstance().getGameManager().endGame("Game Ended.", GameEndReason.FORCE);
+            }
             return true;
         }
         return false;
