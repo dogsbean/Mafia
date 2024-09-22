@@ -41,16 +41,6 @@ public class GameManager {
         }
         Main.getInstance().getRoleManager().assignRoles(players);
         Main.getInstance().getDayCycle().start();
-
-        Bukkit.getScheduler().runTaskTimer(Main.getInstance(), this::gameLoop, 0, 1200); // 60초마다 호출
-    }
-
-    private void gameLoop() {
-        if (!gameInProgress) {
-            return;
-        }
-
-        Bukkit.broadcastMessage("남은 일수: " + Main.getInstance().getDayCycle().getLeftDays());
     }
 
     public void endGame(String message, GameEndReason reason) {

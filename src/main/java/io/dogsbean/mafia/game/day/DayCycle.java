@@ -3,6 +3,7 @@ package io.dogsbean.mafia.game.day;
 import io.dogsbean.mafia.Main;
 import io.dogsbean.mafia.game.law.Criminal;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class DayCycle {
@@ -27,7 +28,11 @@ public class DayCycle {
                     cancel();
                     dayTask = null;
                 } else {
-                    Bukkit.broadcastMessage("Day " + day + "이 시작되었습니다.");
+                    Bukkit.broadcastMessage("");
+                    Bukkit.broadcastMessage(ChatColor.GREEN + "Day " + day + "이 시작되었습니다.");
+                    Bukkit.broadcastMessage("남은 일수: " + getLeftDays());
+                    Bukkit.broadcastMessage("");
+
                     String mostWanted = Criminal.getMostWanted();
                     if (mostWanted != null) {
                         Main.getInstance().getNewsManager().publishNews(mostWanted + ", " + Criminal.getCrimes(mostWanted) + "을 저지르다.",
@@ -36,7 +41,7 @@ public class DayCycle {
                 }
             }
         };
-        dayTask.runTaskTimer(Main.getInstance(), 0L, 1200);
+        dayTask.runTaskTimer(Main.getInstance(), 0L, 1200); // 60초마다 실행
     }
 
     private void endGame() {

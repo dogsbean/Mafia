@@ -2,6 +2,7 @@ package io.dogsbean.mafia.game.police;
 
 import io.dogsbean.mafia.Main;
 import io.dogsbean.mafia.npc.NPC;
+import io.dogsbean.mafia.util.PlayerTitle;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -22,6 +23,8 @@ public class PoliceSystem {
         if (reportedPlayer.contains(player.getUniqueId())) {
             return;
         }
+
+        PlayerTitle.sendTitleToPlayer(player, ChatColor.RED + "범죄 신고", ChatColor.YELLOW + "시민이 당신을 신고했습니다.");
 
         reportedNPCs.add(npc);
         reportedPlayer.add(player.getUniqueId());
@@ -54,7 +57,7 @@ public class PoliceSystem {
         police.setTarget(player);
 
         Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
-            if (!arrested.contains(player.getUniqueId())) {
+            if (!arrested.contains(player.getUniqueId()) && police.getLocation().distance(player.getLocation()) < 30) {
                 removePolices(player);
                 player.sendMessage(ChatColor.GREEN + "경찰이 사라졌습니다. 안전합니다.");
             }
