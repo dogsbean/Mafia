@@ -8,10 +8,13 @@ import io.dogsbean.mafia.game.law.laws.AssaultLaw;
 import io.dogsbean.mafia.game.law.laws.MurderLaw;
 import io.dogsbean.mafia.npc.NPC;
 import io.dogsbean.mafia.npc.Personality;
+import io.dogsbean.mafia.util.PlayerTitle;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
@@ -94,12 +97,21 @@ public class PlayerLawListener implements Listener {
                     if (nearbyTrustLevel != null) {
                         nearbyNPC.updateTrust(nearbyPlayer, -5);
                         nearbyNPC.getVillager().addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 3, 3));
-                        npc.onPlayerViolation(player, new AssaultLaw());
                     }
                 }
                 nearbyNPC.updatePersonality(5);
             }
         }
+
+        if (Main.getInstance().getPoliceSystem().getNearByPolice(player.getLocation()) != null) {
+            IronGolem police = Main.getInstance().getPoliceSystem().getNearByPolice(player.getLocation());
+
+            Main.getInstance().getPoliceSystem().getPolices().put(player.getUniqueId(), police);
+            police.setTarget(player);
+            PlayerTitle.sendTitleToPlayer(player, ChatColor.BLUE + "경찰 앞에서 범죄를 저질렀습니다.", "명복을 빕니다");
+        }
+
+        npc.onPlayerViolation(player, new AssaultLaw());
     }
 
     @EventHandler

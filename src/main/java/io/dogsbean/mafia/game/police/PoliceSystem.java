@@ -5,6 +5,7 @@ import io.dogsbean.mafia.npc.NPC;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
@@ -51,6 +52,13 @@ public class PoliceSystem {
         player.sendMessage("경찰이 출동했습니다! 도망치지 마세요!");
 
         police.setTarget(player);
+
+        Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+            if (!arrested.contains(player.getUniqueId())) {
+                removePolices(player);
+                player.sendMessage(ChatColor.GREEN + "경찰이 사라졌습니다. 안전합니다.");
+            }
+        }, 600L);
     }
 
     public void arrestPlayer(Player player) {
@@ -70,6 +78,18 @@ public class PoliceSystem {
         } else {
             player.sendMessage("당신의 경찰이 없습니다.");
         }
+    }
+
+    public IronGolem getNearByPolice(Location location) {
+        for (Map.Entry<UUID, IronGolem> entry : polices.entrySet()) {
+            IronGolem police = entry.getValue();
+            if (police != null && police.isValid()) {
+                if (police.getLocation().distance(location) <= 30) {
+                    return police;
+                }
+            }
+        }
+        return null;
     }
 
     public void clear(Player player) {
