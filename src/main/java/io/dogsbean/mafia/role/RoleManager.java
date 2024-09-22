@@ -2,24 +2,31 @@ package io.dogsbean.mafia.role;
 
 import io.dogsbean.mafia.role.roles.CCTVWorker;
 import io.dogsbean.mafia.role.roles.Mafia;
+import io.dogsbean.mafia.role.roles.StoreWorker;
+import lombok.Getter;
 import org.bukkit.entity.Player;
 
 import java.util.*;
 
 public class RoleManager {
-    private Map<Player, Role> playerRoles = new HashMap<>();
+    @Getter private Map<Player, Role> playerRoles = new HashMap<>();
 
     public void assignRoles(List<Player> players) {
         playerRoles.clear();
         List<Role> roles = new ArrayList<>();
 
         int mafiaCount = Math.max(1, players.size() / 3);
+
         for (int i = 0; i < mafiaCount; i++) {
             roles.add(new Mafia(players.get(i)));
         }
 
         for (int i = mafiaCount; i < players.size(); i++) {
-            roles.add(new CCTVWorker(players.get(i)));
+            if (i % 2 == 0) {
+                roles.add(new CCTVWorker(players.get(i)));
+            } else {
+                roles.add(new StoreWorker(players.get(i)));
+            }
         }
 
         Collections.shuffle(roles);
