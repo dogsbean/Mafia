@@ -1,5 +1,6 @@
 package io.dogsbean.mafia.game.player;
 
+import io.dogsbean.mafia.game.law.Criminal;
 import lombok.Getter;
 import org.bukkit.entity.Player;
 

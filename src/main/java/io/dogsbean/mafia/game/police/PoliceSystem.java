@@ -56,7 +56,6 @@ public class PoliceSystem {
     public void arrestPlayer(Player player) {
         player.sendMessage(ChatColor.RED + ChatColor.BOLD.toString() + "경찰에 의해 체포되었습니다!");
         arrested.add(player.getUniqueId());
-        player.setWalkSpeed(0);
     }
 
     public void removePolices(Player player) {
@@ -78,6 +77,5 @@ public class PoliceSystem {
         reportedPlayer.clear();
         removePolices(player);
         arrested.clear();
-        player.setWalkSpeed(0.2F);
     }
 }

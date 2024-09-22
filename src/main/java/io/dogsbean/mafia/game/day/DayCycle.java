@@ -1,6 +1,7 @@
 package io.dogsbean.mafia.game.day;
 
 import io.dogsbean.mafia.Main;
+import io.dogsbean.mafia.game.law.Criminal;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -27,6 +28,11 @@ public class DayCycle {
                     dayTask = null;
                 } else {
                     Bukkit.broadcastMessage("Day " + day + "이 시작되었습니다.");
+                    String mostWanted = Criminal.getMostWanted();
+                    if (mostWanted != null) {
+                        Main.getInstance().getNewsManager().publishNews(mostWanted + ", " + Criminal.getCrimes(mostWanted) + "을 저지르다.",
+                                "경찰이 현재 수사 중입니다.");
+                    }
                 }
             }
         };

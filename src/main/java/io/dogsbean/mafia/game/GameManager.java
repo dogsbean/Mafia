@@ -1,6 +1,7 @@
 package io.dogsbean.mafia.game;
 
 import io.dogsbean.mafia.Main;
+import io.dogsbean.mafia.game.law.Criminal;
 import io.dogsbean.mafia.game.law.Law;
 import io.dogsbean.mafia.game.law.actions.ArsonAction;
 import io.dogsbean.mafia.game.player.PlayerProfile;
@@ -74,6 +75,7 @@ public class GameManager {
 
         players.clear();
         spectators.clear();
+        Criminal.clearCrimes();
     }
 
     private String getResultMessage(Role role, GameEndReason reason) {
