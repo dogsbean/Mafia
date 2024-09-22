@@ -6,6 +6,7 @@ import io.dogsbean.mafia.npc.Personality;
 import io.dogsbean.mafia.npc.event.PersonalityChangeEvent;
 import io.dogsbean.mafia.npc.event.TrustLevelChangeEvent;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
@@ -13,6 +14,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.PotionSplashEvent;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 public class NPCListener implements Listener {
 
@@ -43,32 +47,35 @@ public class NPCListener implements Listener {
             return;
         }
 
-        Villager villager = npc.getVillager();
-        double health = villager.getHealth();
-        double maxHealth = villager.getMaxHealth();
-        double healthPercentage = (health / maxHealth) * 100;
-
-        Integer trustLevel = npc.getTrustLevel().get(player);
-        if (trustLevel != null && trustLevel > 0) {
-            npc.updateTrust(player, -20);
-        }
-
-        if (healthPercentage <= 25) {
-            npc.interactLowHealth(player);
-        } else if (healthPercentage <= 50) {
-            npc.interactLowHealth(player);
-        } else if (healthPercentage <= 75) {
-            npc.interact(player);
+        // 호전적인 NPC의 반응 처리
+        double healthPercentage = (npc.getVillager().getHealth() / npc.getVillager().getMaxHealth()) * 100;
+        if (npc.getPersonality() == Personality.HOSTILE) {
+            if (healthPercentage > 50) {
+                player.sendMessage("뭐야? 왜 때려?");
+            } else {
+                npc.interactAttack(player);
+            }
+            npc.getVillager().setTarget(player);
+            player.damage(1.0, npc.getVillager());
         } else {
-            npc.interact(player);
+            // 기존 로직: 신뢰 수준 감소 및 메시지 처리
+            Integer trustLevel = npc.getTrustLevel().get(player);
+            if (trustLevel != null && trustLevel > 0) {
+                npc.updateTrust(player, -20);
+            }
+
+            npc.getVillager().addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 3, 3));
+            npc.interactAttack(player);
         }
 
+        // 주변 NPC의 반응 처리
         for (NPC nearbyNPC : Main.getInstance().getNpcManager().getNPCS()) {
             if (nearbyNPC != npc && nearbyNPC.getVillager().getLocation().distance(npc.getVillager().getLocation()) <= 10) {
                 for (Player nearbyPlayer : Bukkit.getOnlinePlayers()) {
                     Integer nearbyTrustLevel = nearbyNPC.getTrustLevel().get(nearbyPlayer);
                     if (nearbyTrustLevel != null) {
                         nearbyNPC.updateTrust(nearbyPlayer, -5);
+                        nearbyNPC.getVillager().addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 3, 3));
                     }
                 }
                 nearbyNPC.updatePersonality(5);

@@ -36,13 +36,11 @@ public class NPCManager {
             Bukkit.getLogger().info("World or player is null!");
             return;
         }
-        Random random = new Random();
 
         for (int i = 0; i < 4; i++) {
             int offsetX = random.nextInt(61) - 30;
             int offsetZ = random.nextInt(61) - 30;
             Location npcLocation = player.getLocation().add(offsetX, 0, offsetZ);
-
             npcLocation.setY(world.getHighestBlockYAt(npcLocation));
 
             Villager villager = (Villager) world.spawnEntity(npcLocation, EntityType.VILLAGER);
@@ -50,7 +48,8 @@ public class NPCManager {
             villager.setCustomNameVisible(true);
             villager.setProfession(getRandomProfession());
 
-            NPC npc = new NPC(villager, Personality.FRIENDLY);
+            Personality personality = random.nextInt(3) == 0 ? Personality.HOSTILE : Personality.FRIENDLY;
+            NPC npc = new NPC(villager, Personality.HOSTILE);
             npc.initializeTrust(player, 50);
             npcVillagers.add(npc);
             Bukkit.getLogger().info("NPC added: " + npc.getVillager().getUniqueId());

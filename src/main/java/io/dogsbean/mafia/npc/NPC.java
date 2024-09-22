@@ -34,7 +34,7 @@ public class NPC {
         player.sendMessage(villager.getCustomName() + ": " + responseMessage);
     }
 
-    public void interactLowHealth(Player player) {
+    public void interactAttack(Player player) {
         String responseMessage = NPCLang.getHealthBasedMessage(this);
         player.sendMessage(villager.getCustomName() + ": " + responseMessage);
     }
@@ -75,15 +75,11 @@ public class NPC {
         }
     }
 
-    public static Personality getPersonalityByLevel(int level) {
-        Personality bestMatch = null;
-        for (Personality personality : Personality.values()) {
-            if (personality.getPersonalityLevel() <= level) {
-                if (bestMatch == null || personality.getPersonalityLevel() > bestMatch.getPersonalityLevel()) {
-                    bestMatch = personality;
-                }
-            }
+    private Personality getPersonalityByLevel(int level) {
+        // 예시: level이 범위를 초과할 경우 null 대신 기본값 반환
+        if (level < 0 || level >= Personality.values().length) {
+            return Personality.FRIENDLY; // 기본 Personality 반환
         }
-        return bestMatch;
+        return Personality.values()[level]; // 범위 내일 경우 해당 Personality 반환
     }
 }
