@@ -129,11 +129,17 @@ public class NPCManager {
     }
 
     public boolean canNPCSeePlayer(Villager villager, Player player1) {
-        Location eye = villager.getEyeLocation();
-        Vector toEntity = player1.getEyeLocation().toVector().subtract(eye.toVector());
-        double dot = toEntity.normalize().dot(eye.getDirection());
+        Location playerEyeLocation = player1.getEyeLocation();
+        Location villagerEyeLocation = villager.getEyeLocation();
+        Vector toPlayer = playerEyeLocation.toVector().subtract(villagerEyeLocation.toVector()).normalize();
+        Vector villagerDirection = villagerEyeLocation.getDirection();
 
-        return dot > 0.99D;
+        double dot = toPlayer.dot(villagerDirection);
+        if (dot > 0.99D) {
+            return villager.hasLineOfSight(player1);
+        }
+
+        return false;
     }
 
     public NPC getNPC(Villager villager) {

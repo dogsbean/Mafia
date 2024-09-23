@@ -96,7 +96,7 @@ public class NPC {
 
         NPCAction action = law.getNpcAction();
         if (action != null) {
-            action.execute(player);
+            action.execute(player, this);
         }
     }
 }

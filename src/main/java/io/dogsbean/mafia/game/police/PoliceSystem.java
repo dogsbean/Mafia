@@ -13,28 +13,30 @@ import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Villager;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.util.*;
 
 public class PoliceSystem {
-    private List<NPC> reportedNPCs = new ArrayList<>();
+    private Map<Player, NPC> reportedNPCs = new HashMap<>();
     @Getter private Map<UUID, Law> reportedPlayer = new HashMap<>();
     @Getter private List<UUID> arrested = new ArrayList<>();
     @Getter private Map<UUID, IronGolem> polices = new HashMap<>();
+    private BukkitTask policeSpawnTask;
+    private BukkitTask policeRemoveTask;
 
     public void reportPlayer(NPC npc, Player player, Law law) {
-        if (reportedPlayer.get(player.getUniqueId()) == null) {
+        if (reportedPlayer.get(player.getUniqueId()) != null) {
             return;
         }
 
         PlayerTitle.sendTitleToPlayer(player, ChatColor.RED + "범죄 신고", ChatColor.YELLOW + "시민이 당신을 신고했습니다.");
 
-        reportedNPCs.add(npc);
+        reportedNPCs.put(player, npc);
         reportedPlayer.put(player.getUniqueId(), law);
         player.sendMessage(ChatColor.YELLOW + ChatColor.BOLD.toString() + "경찰이 곧 도착합니다. 빨리 피하세요!");
-        Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+        policeSpawnTask = Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
             spawnPolice(player);
             if (isPlayerHiding(npc, player)) {
                 IronGolem ironGolem = polices.get(player.getUniqueId());
@@ -52,7 +54,14 @@ public class PoliceSystem {
             return;
         }
 
-        NPC npc = reportedNPCs.get(0);
+        NPC npc = reportedNPCs.get(player);
+        if (npc == null || npc.getVillager().isDead()) {
+            player.sendMessage(ChatColor.RED + "신고된 NPC가 유효하지 않습니다.");
+            reportedNPCs.remove(player);
+            reportedPlayer.remove(player.getUniqueId());
+            return;
+        }
+
         IronGolem police = (IronGolem) player.getWorld().spawnEntity(npc.getVillager().getLocation(), EntityType.IRON_GOLEM);
         police.setCustomName("경찰");
         police.setCustomNameVisible(true);
@@ -66,7 +75,7 @@ public class PoliceSystem {
 
         police.setTarget(player);
 
-        Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+        policeRemoveTask = Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
             if (!arrested.contains(player.getUniqueId()) && police.getLocation().distance(player.getLocation()) < 30) {
                 removePolices(player);
                 player.sendMessage(ChatColor.GREEN + "경찰이 사라졌습니다. 안전합니다.");
@@ -80,12 +89,15 @@ public class PoliceSystem {
     }
 
     public void removePolices(Player player) {
+        Bukkit.broadcastMessage("asadf");
         if (polices.containsKey(player.getUniqueId())) {
             IronGolem police = polices.get(player.getUniqueId());
             if (police != null) {
                 police.setTarget(null);
                 police.remove();
                 polices.remove(player.getUniqueId());
+                reportedPlayer.remove(player.getUniqueId());
+                reportedNPCs.remove(player);
                 Bukkit.getLogger().info("플레이어 " + player.getName() + "의 경찰이 제거되었습니다.");
             }
         } else {
@@ -106,11 +118,18 @@ public class PoliceSystem {
     }
 
     public boolean canPoliceSeePlayer(IronGolem ironGolem, Player player1) {
-        Location eye = ironGolem.getEyeLocation();
-        Vector toEntity = player1.getEyeLocation().toVector().subtract(eye.toVector());
-        double dot = toEntity.normalize().dot(eye.getDirection());
+        Location playerEyeLocation = player1.getEyeLocation();
+        Location villagerEyeLocation = ironGolem.getEyeLocation();
+        Vector toPlayer = playerEyeLocation.toVector().subtract(villagerEyeLocation.toVector()).normalize();
+        Vector villagerDirection = villagerEyeLocation.getDirection();
 
-        return dot > 0.99D;
+        double dot = toPlayer.dot(villagerDirection);
+        if (dot > 0.99D) {
+            player1.sendMessage("Police detected you");
+            return ironGolem.hasLineOfSight(player1);
+        }
+
+        return false;
     }
 
     public void clear(Player player) {
@@ -118,5 +137,13 @@ public class PoliceSystem {
         reportedPlayer.clear();
         removePolices(player);
         arrested.clear();
+
+        if (policeSpawnTask != null) {
+            policeSpawnTask.cancel();
+        }
+
+        if (policeRemoveTask != null) {
+            policeRemoveTask.cancel();
+        }
     }
 }
