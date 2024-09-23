@@ -3,6 +3,7 @@ package io.dogsbean.mafia.game.police;
 import io.dogsbean.mafia.Main;
 import io.dogsbean.mafia.game.law.Crime;
 import io.dogsbean.mafia.game.law.Criminal;
+import io.dogsbean.mafia.game.law.Law;
 import io.dogsbean.mafia.npc.NPC;
 import io.dogsbean.mafia.util.PlayerTitle;
 import lombok.Getter;
@@ -12,24 +13,26 @@ import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Villager;
+import org.bukkit.util.Vector;
 
 import java.util.*;
 
 public class PoliceSystem {
     private List<NPC> reportedNPCs = new ArrayList<>();
-    @Getter private List<UUID> reportedPlayer = new ArrayList<>();
+    @Getter private Map<UUID, Law> reportedPlayer = new HashMap<>();
     @Getter private List<UUID> arrested = new ArrayList<>();
     @Getter private Map<UUID, IronGolem> polices = new HashMap<>();
 
-    public void reportPlayer(NPC npc, Player player) {
-        if (reportedPlayer.contains(player.getUniqueId())) {
+    public void reportPlayer(NPC npc, Player player, Law law) {
+        if (reportedPlayer.get(player.getUniqueId()) == null) {
             return;
         }
 
         PlayerTitle.sendTitleToPlayer(player, ChatColor.RED + "범죄 신고", ChatColor.YELLOW + "시민이 당신을 신고했습니다.");
 
         reportedNPCs.add(npc);
-        reportedPlayer.add(player.getUniqueId());
+        reportedPlayer.put(player.getUniqueId(), law);
         player.sendMessage(ChatColor.YELLOW + ChatColor.BOLD.toString() + "경찰이 곧 도착합니다. 빨리 피하세요!");
         Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
             spawnPolice(player);
@@ -41,7 +44,7 @@ public class PoliceSystem {
     }
 
     private boolean isPlayerHiding(NPC npc, Player player) {
-        return npc.getVillager().getLocation().distance(player.getLocation()) > 30;
+        return npc.getVillager().getLocation().distance(player.getLocation()) > 30 && Main.getInstance().getNpcManager().canNPCSeePlayer(npc.getVillager(), player);
     }
 
     private void spawnPolice(Player player) {
@@ -59,7 +62,7 @@ public class PoliceSystem {
             Crime murder = new Crime("살인", "사람을 죽이는 범죄", 90);
             Criminal.commitCrime(player.getName(), murder);
         }
-        player.sendMessage("경찰이 출동했습니다! 도망치지 마세요!");
+        player.sendMessage("경찰이 출동했습니다!");
 
         police.setTarget(player);
 
@@ -100,6 +103,14 @@ public class PoliceSystem {
             }
         }
         return null;
+    }
+
+    public boolean canPoliceSeePlayer(IronGolem ironGolem, Player player1) {
+        Location eye = ironGolem.getEyeLocation();
+        Vector toEntity = player1.getEyeLocation().toVector().subtract(eye.toVector());
+        double dot = toEntity.normalize().dot(eye.getDirection());
+
+        return dot > 0.99D;
     }
 
     public void clear(Player player) {

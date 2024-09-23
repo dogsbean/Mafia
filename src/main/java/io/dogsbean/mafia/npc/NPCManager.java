@@ -9,6 +9,7 @@ import java.util.Random;
 
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
+import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -93,34 +94,46 @@ public class NPCManager {
                 .anyMatch(npc -> npc.getVillager().getCustomName().equals(name));
     }
 
-    public List<NPC> getNearestVillagers(Villager villager, int limit) {
+    public List<NPC> getNearestVillagers(Villager villager, Player player, int limit) {
         return npcVillagers.stream()
                 .filter(npc -> npc.getVillager() != villager)
+                .filter(npc -> canNPCSeePlayer(npc.getVillager(), player)) // 시야 조건 추가
                 .sorted(Comparator.comparingDouble(npc -> npc.getVillager().getLocation().distance(villager.getLocation())))
                 .limit(limit)
                 .collect(Collectors.toList());
     }
 
-    public List<NPC> getNearestVillagersWithinRange(Villager villager, double range) {
+    public List<NPC> getNearestVillagersWithinRange(Villager villager, Player player, double range) {
         return npcVillagers.stream()
                 .filter(npc -> npc.getVillager() != villager)
+                .filter(npc -> canNPCSeePlayer(npc.getVillager(), player)) // 시야 조건 추가
                 .filter(npc -> npc.getVillager().getLocation().distance(villager.getLocation()) <= range)
                 .sorted(Comparator.comparingDouble(npc -> npc.getVillager().getLocation().distance(villager.getLocation())))
                 .collect(Collectors.toList());
     }
 
-    public List<NPC> getNearestVillagersWithinRange(Location location, double range) {
+    public List<NPC> getNearestVillagersWithinRange(Location location, Player player, double range) {
         return npcVillagers.stream()
+                .filter(npc -> canNPCSeePlayer(npc.getVillager(), player)) // 시야 조건 추가
                 .filter(npc -> npc.getVillager().getLocation().distance(location) <= range)
                 .sorted(Comparator.comparingDouble(npc -> npc.getVillager().getLocation().distance(location)))
                 .collect(Collectors.toList());
     }
 
-    public NPC getNearestVillagerWithinRange(Location location, double range) {
+    public NPC getNearestVillagerWithinRange(Location location, Player player, double range) {
         return npcVillagers.stream()
+                .filter(npc -> canNPCSeePlayer(npc.getVillager(), player)) // 시야 조건 추가
                 .filter(npc -> npc.getVillager().getLocation().distance(location) <= range)
                 .min(Comparator.comparingDouble(npc -> npc.getVillager().getLocation().distance(location)))
                 .orElse(null);
+    }
+
+    public boolean canNPCSeePlayer(Villager villager, Player player1) {
+        Location eye = villager.getEyeLocation();
+        Vector toEntity = player1.getEyeLocation().toVector().subtract(eye.toVector());
+        double dot = toEntity.normalize().dot(eye.getDirection());
+
+        return dot > 0.99D;
     }
 
     public NPC getNPC(Villager villager) {

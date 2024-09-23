@@ -5,9 +5,15 @@ import io.dogsbean.mafia.game.law.NPCAction;
 import io.dogsbean.mafia.npc.event.PersonalityChangeEvent;
 import io.dogsbean.mafia.npc.event.TrustLevelChangeEvent;
 import lombok.Getter;
+import net.minecraft.server.v1_12_R1.BlockPosition;
+import net.minecraft.server.v1_12_R1.EntityPlayer;
+import net.minecraft.server.v1_12_R1.EntityVillager;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
+import org.bukkit.util.Vector;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -82,14 +88,13 @@ public class NPC {
         if (level < 0 || level >= Personality.values().length) {
             return Personality.FRIENDLY; // 기본 Personality 반환
         }
-        return Personality.values()[level]; // 범위 내일 경우 해당 Personality 반환
+        return Personality.values()[level];
     }
 
     public void onPlayerViolation(Player player, Law law) {
-        Bukkit.getLogger().info("법 위반 발생: " + law.getDescription()); // 디버깅 메시지 추가
+        Bukkit.getLogger().info("법 위반 발생: " + law.getDescription());
 
-        // 단일 NPCAction 실행
-        NPCAction action = law.getNpcAction(); // 수정된 부분
+        NPCAction action = law.getNpcAction();
         if (action != null) {
             action.execute(player);
         }

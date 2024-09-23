@@ -36,7 +36,7 @@ public class PlayerLawListener implements Listener {
 
         if (block.getType() == Material.FIRE || block.getType() == Material.BURNING_FURNACE) {
             if (isArson(player)) {
-                NPC npc = Main.getInstance().getNpcManager().getNearestVillagerWithinRange(player.getLocation(), 10);
+                NPC npc = Main.getInstance().getNpcManager().getNearestVillagerWithinRange(player.getLocation(), player, 10);
                 if (npc != null) {
                     npc.onPlayerViolation(player, new ArsonLaw());
                 }
@@ -105,6 +105,9 @@ public class PlayerLawListener implements Listener {
 
         if (Main.getInstance().getPoliceSystem().getNearByPolice(player.getLocation()) != null) {
             IronGolem police = Main.getInstance().getPoliceSystem().getNearByPolice(player.getLocation());
+            if (!Main.getInstance().getPoliceSystem().canPoliceSeePlayer(police, player)) {
+                return;
+            }
 
             Main.getInstance().getPoliceSystem().getPolices().put(player.getUniqueId(), police);
             police.setTarget(player);
@@ -127,14 +130,21 @@ public class PlayerLawListener implements Listener {
             return;
         }
 
-        for (NPC npc : Main.getInstance().getNpcManager().getNearestVillagersWithinRange(deadVillager, 10)) {
+        if (event.getEntity().getKiller() == null) {
+            return;
+        }
+
+        Player killer = event.getEntity().getKiller();
+        if (!Main.getInstance().getGameManager().getPlayers().contains(killer)) {
+            return;
+        }
+
+        for (NPC npc : Main.getInstance().getNpcManager().getNearestVillagersWithinRange(deadVillager, killer, 10)) {
             if (npc != deadNPC) {
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    Integer trustLevel = npc.getTrustLevel().get(player);
-                    if (trustLevel != null) {
-                        npc.updateTrust(player, -20);
-                        npc.onPlayerViolation(player, new MurderLaw());
-                    }
+                Integer trustLevel = npc.getTrustLevel().get(killer);
+                if (trustLevel != null) {
+                    npc.updateTrust(killer, -20);
+                    npc.onPlayerViolation(killer, new MurderLaw());
                 }
                 npc.updatePersonality(20);
             }

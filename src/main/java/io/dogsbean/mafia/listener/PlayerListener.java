@@ -104,7 +104,7 @@ public class PlayerListener implements Listener {
             return;
         }
 
-        if (!Main.getInstance().getPoliceSystem().getReportedPlayer().contains(player.getUniqueId())) {
+        if (Main.getInstance().getPoliceSystem().getReportedPlayer().get(player.getUniqueId()) == null) {
             return;
         }
 
@@ -119,6 +119,9 @@ public class PlayerListener implements Listener {
         IronGolem police = Main.getInstance().getPoliceSystem().getPolices().get(player.getUniqueId());
 
         if (police != null) {
+            if (!Main.getInstance().getPoliceSystem().canPoliceSeePlayer(police, player)) {
+                return;
+            }
             double distance = police.getLocation().distance(player.getLocation());
 
             if (distance <= 10) {
