@@ -3,7 +3,6 @@ package io.dogsbean.mafia.listener;
 import io.dogsbean.mafia.Main;
 import io.dogsbean.mafia.game.GameEndReason;
 import io.dogsbean.mafia.role.Role;
-import io.dogsbean.mafia.role.RoleManager;
 import io.dogsbean.mafia.role.roles.Mafia;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -12,12 +11,13 @@ import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+
+import java.util.List;
+import java.util.UUID;
 
 public class PlayerListener implements Listener {
 
@@ -89,28 +89,49 @@ public class PlayerListener implements Listener {
             return;
         }
 
-        if (event.getEntity().getType() != EntityType.PLAYER) {
-            return;
-        }
-
-        if (event.getDamager().getType() != EntityType.IRON_GOLEM) {
-            return;
+        if (event.getEntity().getType() != EntityType.PLAYER || event.getDamager().getType() != EntityType.IRON_GOLEM) {
+            return; // Check both entity types in one condition
         }
 
         Player player = (Player) event.getEntity();
         IronGolem ironGolem = (IronGolem) event.getDamager();
 
-        if (Main.getInstance().getPoliceSystem().getPolices().get(player.getUniqueId()) != ironGolem) {
+        // No need to check for null again after cast since we validated the entity type
+        if (Main.getInstance().getPoliceSystem().getReportedPlayer().get(player.getUniqueId()) == null) {
+            return; // Player is not reported, exit
+        }
+
+        // Fetch the list of arrested players for the given Iron Golem
+        List<UUID> arrestedPlayers = Main.getInstance().getPoliceSystem().getArrested().get(ironGolem);
+
+        // Check if the list of arrested players is null before calling contains
+        if (arrestedPlayers == null || !arrestedPlayers.contains(player.getUniqueId())) {
+            Main.getInstance().getPoliceSystem().arrestPlayer(player, ironGolem);
+        }
+    }
+
+    @EventHandler
+    public void onAttackPolice(EntityDamageByEntityEvent event) {
+        if (!Main.getInstance().getGameManager().isGameInProgress()) {
             return;
         }
+
+        if (event.getEntity().getType() != EntityType.IRON_GOLEM) {
+            return;
+        }
+
+        if (event.getDamager().getType() != EntityType.PLAYER) {
+            return;
+        }
+
+        Player player = (Player) event.getDamager();
+        IronGolem ironGolem = (IronGolem) event.getEntity();
 
         if (Main.getInstance().getPoliceSystem().getReportedPlayer().get(player.getUniqueId()) == null) {
             return;
         }
 
-        if (!Main.getInstance().getPoliceSystem().getArrested().contains(player.getUniqueId())) {
-            Main.getInstance().getPoliceSystem().arrestPlayer(player);
-        }
+        Main.getInstance().getPoliceSystem().useTaserGun(ironGolem, player);
     }
 
     @EventHandler

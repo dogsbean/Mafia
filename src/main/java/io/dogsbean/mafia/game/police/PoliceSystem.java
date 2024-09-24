@@ -7,12 +7,12 @@ import io.dogsbean.mafia.game.law.Law;
 import io.dogsbean.mafia.npc.NPC;
 import io.dogsbean.mafia.util.PlayerTitle;
 import lombok.Getter;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
+import org.bukkit.*;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
+import org.bukkit.material.MaterialData;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
@@ -21,10 +21,9 @@ import java.util.*;
 public class PoliceSystem {
     private Map<Player, NPC> reportedNPCs = new HashMap<>();
     @Getter private Map<UUID, Law> reportedPlayer = new HashMap<>();
-    @Getter private List<UUID> arrested = new ArrayList<>();
+    @Getter private Map<IronGolem, List<UUID>> arrested = new HashMap<>();
     @Getter private Map<UUID, IronGolem> polices = new HashMap<>();
-    private BukkitTask policeSpawnTask;
-    private BukkitTask policeRemoveTask;
+    private List<BukkitTask> tasks = new ArrayList<>();
 
     public void reportPlayer(NPC npc, Player player, Law law) {
         if (reportedPlayer.get(player.getUniqueId()) != null) {
@@ -36,13 +35,15 @@ public class PoliceSystem {
         reportedNPCs.put(player, npc);
         reportedPlayer.put(player.getUniqueId(), law);
         player.sendMessage(ChatColor.YELLOW + ChatColor.BOLD.toString() + "경찰이 곧 도착합니다. 빨리 피하세요!");
-        policeSpawnTask = Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+        BukkitTask task = Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
             spawnPolice(player);
             if (isPlayerHiding(npc, player)) {
                 IronGolem ironGolem = polices.get(player.getUniqueId());
                 ironGolem.setTarget(null);
             }
         }, 200L);
+
+        tasks.add(task);
     }
 
     private boolean isPlayerHiding(NPC npc, Player player) {
@@ -55,7 +56,7 @@ public class PoliceSystem {
         }
 
         NPC npc = reportedNPCs.get(player);
-        if (npc == null || npc.getVillager().isDead()) {
+        if (npc == null) {
             player.sendMessage(ChatColor.RED + "신고된 NPC가 유효하지 않습니다.");
             reportedNPCs.remove(player);
             reportedPlayer.remove(player.getUniqueId());
@@ -75,21 +76,49 @@ public class PoliceSystem {
 
         police.setTarget(player);
 
-        policeRemoveTask = Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
-            if (!arrested.contains(player.getUniqueId()) && police.getLocation().distance(player.getLocation()) < 30) {
+        BukkitTask task = Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+            if (!arrested.get(police).contains(player.getUniqueId()) && police.getLocation().distance(player.getLocation()) < 30) {
                 removePolices(player);
                 player.sendMessage(ChatColor.GREEN + "경찰이 사라졌습니다. 안전합니다.");
             }
         }, 600L);
+
+        tasks.add(task);
     }
 
-    public void arrestPlayer(Player player) {
+    public void arrestPlayer(Player player, IronGolem police) {
         player.sendMessage(ChatColor.RED + ChatColor.BOLD.toString() + "경찰에 의해 체포되었습니다!");
-        arrested.add(player.getUniqueId());
+        arrested.put(police, Collections.singletonList(player.getUniqueId()));
+    }
+
+    public void useTaserGun(IronGolem police, Player target) {
+        Location start = police.getLocation().add(0, 1.5, 0);
+        Location end = target.getLocation();
+
+        // 두 점 사이의 벡터 계산
+        Vector direction = end.toVector().subtract(start.toVector()).normalize();
+
+        double length = start.distance(end);
+        int particleCount = (int) (length * 20);
+
+        for (int i = 0; i <= particleCount; i++) {
+            Location particleLocation = start.clone().add(direction.clone().multiply(i / 10.0));
+            police.getWorld().spawnParticle(Particle.BLOCK_DUST, particleLocation, 1, 0, 0, 0, 0); // 하트 파티클로 변경
+
+            for (Player player : police.getWorld().getPlayers()) {
+                if (player.getLocation().distance(particleLocation) < 0.5) { // 충돌 거리 조정 가능
+                    BukkitTask task = Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+                        player.setWalkSpeed(0);
+                    }, 200L);
+
+                    tasks.add(task);
+                    player.sendMessage("테이저건에 맞았습니다! 이동 속도가 감소했습니다.");
+                }
+            }
+        }
     }
 
     public void removePolices(Player player) {
-        Bukkit.broadcastMessage("asadf");
         if (polices.containsKey(player.getUniqueId())) {
             IronGolem police = polices.get(player.getUniqueId());
             if (police != null) {
@@ -125,7 +154,6 @@ public class PoliceSystem {
 
         double dot = toPlayer.dot(villagerDirection);
         if (dot > 0.99D) {
-            player1.sendMessage("Police detected you");
             return ironGolem.hasLineOfSight(player1);
         }
 
@@ -138,12 +166,8 @@ public class PoliceSystem {
         removePolices(player);
         arrested.clear();
 
-        if (policeSpawnTask != null) {
-            policeSpawnTask.cancel();
-        }
-
-        if (policeRemoveTask != null) {
-            policeRemoveTask.cancel();
+        if (tasks != null) {
+            tasks.forEach(BukkitTask::cancel);
         }
     }
 }

@@ -25,6 +25,9 @@ public class DayCycle {
                 }
 
                 day++;
+
+                Main.getInstance().getQuestManager().checkQuestExpiration(day);
+
                 if (day > totalDays) {
                     endGame();
                     cancel();

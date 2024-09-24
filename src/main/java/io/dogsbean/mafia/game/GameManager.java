@@ -9,6 +9,7 @@ import io.dogsbean.mafia.game.police.PoliceSystem;
 import io.dogsbean.mafia.npc.NPCManager;
 import io.dogsbean.mafia.role.Role;
 import io.dogsbean.mafia.role.roles.Mafia;
+import io.dogsbean.mafia.util.PlayerUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -38,8 +39,10 @@ public class GameManager {
         players.addAll(Bukkit.getOnlinePlayers());
         for (Player player : players) {
             npcManager.loadVillagers(world, player);
+            PlayerUtils.reset(player, GameMode.SURVIVAL);
         }
         Main.getInstance().getRoleManager().assignRoles(players);
+        players.forEach(player -> Main.getInstance().getQuestManager().initializeQuest(player));
         Main.getInstance().getDayCycle().start();
     }
 
@@ -54,6 +57,7 @@ public class GameManager {
             Role role = Main.getInstance().getRoleManager().getRole(player);
             String resultMessage = getResultMessage(role, reason);
             player.sendMessage(resultMessage);
+            PlayerUtils.reset(player, GameMode.SURVIVAL);
         }
 
         spectators.forEach(spectator -> spectator.setGameMode(GameMode.SURVIVAL));

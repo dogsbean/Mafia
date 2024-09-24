@@ -1,11 +1,12 @@
 package io.dogsbean.mafia.game.law.listener;
 
 import io.dogsbean.mafia.Main;
-import io.dogsbean.mafia.game.law.Law;
-import io.dogsbean.mafia.game.law.NPCAction;
 import io.dogsbean.mafia.game.law.laws.ArsonLaw;
 import io.dogsbean.mafia.game.law.laws.AssaultLaw;
 import io.dogsbean.mafia.game.law.laws.MurderLaw;
+import io.dogsbean.mafia.game.quest.Quest;
+import io.dogsbean.mafia.game.quest.QuestEndReason;
+import io.dogsbean.mafia.game.quest.QuestType;
 import io.dogsbean.mafia.npc.NPC;
 import io.dogsbean.mafia.npc.Personality;
 import io.dogsbean.mafia.util.PlayerTitle;
@@ -22,13 +23,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.util.BlockIterator;
 
 public class PlayerLawListener implements Listener {
-
     @EventHandler
     public void onFire(BlockPlaceEvent event) {
         Player player = event.getPlayer();
@@ -74,9 +72,9 @@ public class PlayerLawListener implements Listener {
         double healthPercentage = (npc.getVillager().getHealth() / npc.getVillager().getMaxHealth()) * 100;
         if (npc.getPersonality() == Personality.HOSTILE) {
             if (healthPercentage > 50) {
-                player.sendMessage("뭐야? 왜 때려?");
+                Main.getInstance().getLlamaAPI().sendLlamaMessage(npc.getPersonality(), player, "(상황: 당신의 앞에 보이는 사람이 한국인 말을 사용하는 당신을 폭행합니다. 당신은 그를 경계합니다. 당신은 호전적입니다. 당신은 생명의 위협을 느끼지 못합니다. 최대한 상황에 맞게 반응해보세요. 예: '왜 그러는 거야?' 또는 '그만해!')");
             } else {
-                npc.interactAttack(player);
+                Main.getInstance().getLlamaAPI().sendLlamaMessage(npc.getPersonality(), player, "(상황: 당신의 앞에 보이는 사람이 한국인 말을 사용하는 당신을 폭행합니다. 당신은 그를 경계합니다. 당신은 호전적입니다. 당신은 생명의 위협을 느낍니다. 최대한 상황에 맞게 반응해보세요. 예: '죽을 것 같아요 제발 살려주세요' 또는 '살려주세요!')");
             }
             npc.getVillager().setTarget(player);
             player.damage(1.0, npc.getVillager());
@@ -87,7 +85,11 @@ public class PlayerLawListener implements Listener {
             }
 
             npc.getVillager().addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 3, 3));
-            npc.interactAttack(player);
+            if (healthPercentage > 50) {
+                Main.getInstance().getLlamaAPI().sendLlamaMessage(npc.getPersonality(), player, "(상황: 당신의 앞에 보이는 사람이 한국인 말을 사용하는 당신을 폭행합니다. 당신은 그와 친합니다. 당신은 아직 생명의 위협을 느끼지 못합니다. 최대한 상황에 맞게 반응해보세요.)");
+            } else {
+                Main.getInstance().getLlamaAPI().sendLlamaMessage(npc.getPersonality(), player, "(상황: 당신의 앞에 보이는 사람이 한국인 말을 사용하는 당신을 폭행합니다. 당신은 그와 친합니다. 당신은 생명의 위협을 느낍니다. 최대한 상황에 맞게 반응해보세요.)");
+            }
         }
 
         for (NPC nearbyNPC : Main.getInstance().getNpcManager().getNPCS()) {
@@ -148,6 +150,17 @@ public class PlayerLawListener implements Listener {
                 }
                 npc.updatePersonality(20);
             }
+        }
+
+        if (Main.getInstance().getQuestManager().getPlayerQuests(killer) == null) {
+            killer.sendMessage("Your quest is null");
+            return;
+        }
+
+        if (Main.getInstance().getQuestManager().hasQuestOfType(killer, QuestType.KILL)) {
+            killer.sendMessage("You have kill quest.");
+            Quest quest = Main.getInstance().getQuestManager().getQuestOfType(killer, QuestType.KILL);
+            Main.getInstance().getQuestManager().endQuest(killer, quest, QuestEndReason.SUCCEED);
         }
     }
 
